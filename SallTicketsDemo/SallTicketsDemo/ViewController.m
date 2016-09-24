@@ -21,7 +21,7 @@ static id instance;
 // initialize 会在类第一次被使用时调用
 // initialize 方法的调用是安全的
 + (void)initialize {
-    NSLog(@"创建单例");
+//    NSLog(@"创建单例");
     instance = [[self alloc]init];
 }
 + (instancetype)sharedTools {
@@ -55,7 +55,9 @@ static id instance;
 //    [self asyncLogin];
 //    [self globleQueue];
 //    [self gcdOnce];
-    [self delay];
+//    [self delay];
+//    [self gcdGroup];
+    [self gcdGroup2];
     
 }
 
@@ -279,6 +281,43 @@ static id instance;
 - (void)after {
     [self.view performSelector:@selector(setBackgroundColor:) withObject:[UIColor orangeColor] afterDelay:1.0];
     NSLog(@"-----%@", [NSThread currentThread]);
+}
+
+/*****GCD调度组*******************/
+- (void)gcdGroup {
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_queue_t queue = dispatch_get_global_queue(0, 0);
+    dispatch_group_async(group, queue, ^{
+        NSLog(@"下载图像 A %@", [NSThread currentThread]);
+    });
+    dispatch_group_async(group, queue, ^{
+        NSLog(@"下载图像 B %@",[NSThread currentThread]);
+    });
+    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        NSLog(@"完成 %@", [NSThread currentThread]);
+    });
+    NSLog(@"come here");
+}
+
+- (void)gcdGroup2 {
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_queue_t queue = dispatch_get_global_queue(0, 0);
+    dispatch_group_enter(group);
+    dispatch_async(queue, ^{
+        [NSThread sleepForTimeInterval:3.0];
+        NSLog(@"download A %@",[NSThread currentThread]);
+        dispatch_group_leave(group);
+    });
+    
+    dispatch_group_enter(group);
+    dispatch_async(queue, ^{
+        NSLog(@"download B %@", [NSThread currentThread]);
+        dispatch_group_leave(group);
+    });
+    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        NSLog(@"完成 %@", [NSThread currentThread]);
+    });
+    NSLog(@"come here");
 }
 
 
